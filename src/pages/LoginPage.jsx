@@ -11,14 +11,6 @@ export default function LoginPage() {
   const dispatch = useDispatch();
   const { loading, auth } = useSelector((state) => state.auth);
   
-  console.log(auth);
-  
-  useEffect(() => {
-    if (auth?._id) {
-      navigate("/tickets"); 
-    }
-  }, [auth, navigate]);
-
   const formik = useFormik({
     initialValues: {
       tenDangNhap: "",
@@ -42,7 +34,14 @@ export default function LoginPage() {
             progress: undefined,
             theme: "light",
           });
-          navigate("/tickets");
+          
+          if(resultAction.payload.employee.role === 1) {
+            await navigate("/");
+          }
+          if(resultAction.payload.employee.role === 0) {
+            await navigate("/tickets");
+          }
+          
         } else {
           toast.error("Đăng nhập thất bại, vui lòng thử lại.", {
             position: "top-right",

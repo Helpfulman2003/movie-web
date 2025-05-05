@@ -19,17 +19,96 @@ const UpdateMovieScreening = () => {
     },
     gioBatDau: '',
     gioKetThuc: '',
-    trangThai: true,
+    tranThai: true,
   });
   const [movies, setMovies] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [errors, setErrors] = useState({});
 
+  const parseDateTime = (value) => {
+    if (!value) return null;
+
+    try {
+      // Chuyển đổi từ định dạng "HH:mm SA/CH dd/mm/yyyy" sang ISO
+      const parts = value.split(' ');
+      if (parts.length !== 3) return null;
+
+      const [timePart, period, datePart] = parts;
+      const [hours, minutes] = timePart.split(':');
+      const [day, month, year] = datePart.split('/');
+
+      // Chuyển đổi sang 24h format
+      let hour24 = parseInt(hours);
+      if (period === 'CH' && hour24 < 12) {
+        hour24 += 12;
+      } else if (period === 'SA' && hour24 === 12) {
+        hour24 = 0;
+      }
+
+      // Tạo đối tượng Date với timezone +07:00
+      const date = new Date(
+        Date.UTC(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+          hour24,
+          parseInt(minutes)
+        )
+      );
+
+      if (isNaN(date.getTime())) return null;
+
+      // Chuyển đổi sang ISO string và thêm timezone +07:00
+      const isoString = date.toISOString();
+      return isoString.replace('T', ' ').replace('Z', '+07:00');
+    } catch (error) {
+      console.error('Error parsing datetime:', error);
+      return null;
+    }
+  };
+
+  const formatDateTime = (date) => {
+    if (!date) return '';
+
+    try {
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) return '';
+
+      // Chuyển đổi sang múi giờ Việt Nam (+07:00)
+      const vietnamDate = new Date(dateObj.getTime() + 7 * 60 * 60 * 1000);
+
+      // Format thời gian với AM/PM
+      const formattedTime = vietnamDate.toLocaleString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour12: true,
+        timeZone: 'UTC',
+      });
+
+      // Thay thế AM/PM bằng SA/CH
+      return formattedTime
+        .replace('AM', 'SA')
+        .replace('PM', 'CH')
+        .replace('am', 'SA')
+        .replace('pm', 'CH');
+    } catch (error) {
+      console.error('Error formatting datetime:', error);
+      return '';
+    }
+  };
+
   useEffect(() => {
-    // Kiểm tra xem có dữ liệu được truyền qua từ MovieScreeningManagement không
     if (location.state && location.state.screening) {
-      setScreening(location.state.screening);
-      setLoading(false); // Tắt loading khi có dữ liệu từ state
+      const screeningData = location.state.screening;
+      setScreening({
+        ...screeningData,
+        gioBatDau: formatDateTime(screeningData.gioBatDau),
+        gioKetThuc: formatDateTime(screeningData.gioKetThuc),
+      });
+      setLoading(false);
     } else if (id) {
       fetchScreening();
     }
@@ -40,69 +119,25 @@ const UpdateMovieScreening = () => {
   const fetchScreening = async () => {
     try {
       setLoading(true);
-      console.log('Fetching screening with ID:', id);
-
       const response = await fetch(
         `http://localhost:8080/movieScreenings/${id}`
       );
-      console.log('Response status:', response.status);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.log('Error data:', errorData);
-        throw new Error(
-          `Lỗi từ server: ${
-            errorData.message || 'Không thể lấy thông tin lịch chiếu'
-          }`
-        );
+        throw new Error('Không thể lấy thông tin lịch chiếu');
       }
 
       const data = await response.json();
-      console.log('Raw screening data:', data);
-
       if (data.data) {
-        // Chuyển đổi datetime từ ISO thành định dạng datetime-local
-        const gioBatDau = new Date(data.data.gioBatDau)
-          .toISOString()
-          .slice(0, 16);
-        const gioKetThuc = new Date(data.data.gioKetThuc)
-          .toISOString()
-          .slice(0, 16);
-
-        console.log('Converted times:', { gioBatDau, gioKetThuc });
-
         setScreening({
-          maPhim: {
-            _id: data.data.maPhim._id || '',
-            tenPhim: data.data.maPhim.tenPhim || '',
-          },
-          maPhong: {
-            _id: data.data.maPhong._id || '',
-            tenPhong: data.data.maPhong.tenPhong || '',
-          },
-          gioBatDau: gioBatDau,
-          gioKetThuc: gioKetThuc,
-          trangThai: data.data.trangThai ?? true,
+          ...data.data,
+          gioBatDau: formatDateTime(data.data.gioBatDau),
+          gioKetThuc: formatDateTime(data.data.gioKetThuc),
         });
-      } else {
-        throw new Error('Dữ liệu lịch chiếu không hợp lệ');
       }
     } catch (error) {
       console.error('Error fetching screening:', error);
       toast.error(error.message);
-      setScreening({
-        maPhim: {
-          _id: '',
-          tenPhim: '',
-        },
-        maPhong: {
-          _id: '',
-          tenPhong: '',
-        },
-        gioBatDau: '',
-        gioKetThuc: '',
-        trangThai: true,
-      });
     } finally {
       setLoading(false);
     }
@@ -177,12 +212,12 @@ const UpdateMovieScreening = () => {
         },
       });
     } else if (name === 'gioBatDau' || name === 'gioKetThuc') {
-      // Chuyển đổi giá trị datetime-local thành định dạng ISO
+      // Chỉ cập nhật giá trị, không cần xử lý datetime ở đây
       setScreening({
         ...screening,
-        [name]: value ? new Date(value).toISOString() : '',
+        [name]: value,
       });
-    } else if (name === 'trangThai') {
+    } else if (name === 'tranThai') {
       setScreening({
         ...screening,
         [name]: checked,
@@ -198,66 +233,31 @@ const UpdateMovieScreening = () => {
       [name]: '',
     }));
   };
-  // const handleChange = (e) => {
-  //     const { name, value, type, checked } = e.target;
-  //     if (name === 'maPhim' || name === 'maPhong') {
-  //         setScreening({
-  //             ...screening,
-  //             [name]: {
-  //                 _id: value,
-  //                 tenPhim: type === 'select' ? e.target.selectedOptions[0].text : ''
-  //             }
-  //         });
-  //     }else if (name === 'gioBatDau' || name === 'gioKetThuc') {
-  //         // KHÔNG convert sang ISO
-  //         setScreening({
-  //             ...screening,
-  //             [name]: value
-  //         });
-
-  //     // } else if (name === 'gioBatDau' || name === 'gioKetThuc') {
-  //     //     // Chuyển đổi giá trị datetime-local thành định dạng ISO
-  //     //     setScreening({
-  //     //         ...screening,
-  //     //         [name]: value ? new Date(value).toISOString() : ''
-  //     //     });
-  //     } else if (name === 'trangThai') {
-  //         setScreening({
-  //             ...screening,
-  //             [name]: checked
-  //         });
-  //     } else {
-  //         setScreening({
-  //             ...screening,
-  //             [name]: value
-  //         });
-  //     }
-  //     setErrors(prevErrors => ({
-  //         ...prevErrors,
-  //         [name]: ''
-  //     }));
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateScreening()) return;
 
-    if (!id) {
-      toast.error('Không tìm thấy ID lịch chiếu để cập nhật.');
-      return;
-    }
-
     try {
       setLoading(true);
+
+      const gioBatDau = parseDateTime(screening.gioBatDau);
+      const gioKetThuc = parseDateTime(screening.gioKetThuc);
+
+      if (!gioBatDau || !gioKetThuc) {
+        throw new Error('Định dạng thời gian không hợp lệ');
+      }
 
       const payload = {
         maPhim: screening?.maPhim?._id,
         maPhong: screening?.maPhong?._id,
-        gioBatDau: screening?.gioBatDau,
-        gioKetThuc: screening?.gioKetThuc,
-        trangThai: screening?.trangThai,
+        gioBatDau,
+        gioKetThuc,
+        tranThai: screening?.tranThai,
       };
+
+      console.log('Sending payload:', payload);
 
       const response = await fetch(
         `http://localhost:8080/movieScreenings/${id}`,
@@ -273,6 +273,7 @@ const UpdateMovieScreening = () => {
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('Server response:', data);
         throw new Error(data.message || 'Không thể cập nhật lịch chiếu');
       }
 
@@ -280,7 +281,7 @@ const UpdateMovieScreening = () => {
       navigate('/movieScreenings');
     } catch (error) {
       console.error('Lỗi cập nhật lịch chiếu:', error);
-      toast.error('Có lỗi xảy ra: ' + error.message);
+      toast.error(`Có lỗi xảy ra: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -363,7 +364,7 @@ const UpdateMovieScreening = () => {
               Giờ bắt đầu
             </label>
             <input
-              type='datetime-local'
+              type='text'
               name='gioBatDau'
               value={screening.gioBatDau}
               onChange={handleChange}
@@ -382,7 +383,7 @@ const UpdateMovieScreening = () => {
               Giờ kết thúc
             </label>
             <input
-              type='datetime-local'
+              type='text'
               name='gioKetThuc'
               value={screening.gioKetThuc}
               onChange={handleChange}
@@ -402,8 +403,8 @@ const UpdateMovieScreening = () => {
             </label>
             <input
               type='checkbox'
-              name='trangThai'
-              checked={screening.trangThai}
+              name='tranThai'
+              checked={screening.tranThai}
               onChange={handleChange}
               className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
             />

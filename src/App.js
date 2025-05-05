@@ -26,6 +26,7 @@ import RoomManagement from './components/RoomManagement';
 import AddRoom from './components/AddRoom';
 import UpdateRoom from './components/UpdateRoom';
 import UpdateMovies from './components/UpdateMovies.js';
+import Dashboard from './pages/Dashboard.jsx';
 // import TicketPage from './pages/TicketPage';
 // import EmployeeProfile from './pages/EmployeeProfile';
 
@@ -33,19 +34,16 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path='/' element={<Header />} />
-        {/* <Route path='/login' element={<Login />} /> */}
-        {/* <Route path='/register' element={<Register />} /> */}
-        {/* <Route path="/manageMovies" element={<ManageMovies />} /> */}
+        <Route path='/' element={<Dashboard />} />
         <Route path='/movies' element={<MovieManagement />} />
-        {/* <Route path='/movies/addmovie/:id?' element={<AddMovie />} /> */}
         <Route path='/movies/addmovie' element={<AddMovie />} />
-        <Route path='/movies/addmovie/:id' element={<AddMovie />} />
         <Route path='/movies/update/:id' element={<UpdateMovies />} />
-        {/* <Route path="/movies/addmovie" element={<AddMovie />} /> */}
-        <Route path="/movieScreenings" element={<MovieScreeningManagement />} />
-        <Route path="/movieScreenings/add" element={<AddMovieScreening />} />
-        {/* <Route path="/movieScreenings/update/:id" element={<UpdateMovieScreening />} /> */}
+        <Route path='/movieScreenings' element={<MovieScreeningManagement />} />
+        <Route path='/movieScreenings/add' element={<AddMovieScreening />} />
+        <Route
+          path='/movieScreenings/update/:id'
+          element={<UpdateMovieScreening />}
+        />
         <Route path='/rooms' element={<RoomManagement />} />
         <Route path='/rooms/addroom' element={<AddRoom />} />
         <Route path='/rooms/update/:id' element={<UpdateRoom />} />

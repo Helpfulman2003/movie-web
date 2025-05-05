@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
+import EmployeeModal from './EmployeeModal';
+import Layout from './Layout';
 
 export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  // State để thêm/cập nhật nhân viên
   const [tenDangNhap, setTenDangNhap] = useState('');
   const [matKhau, setMatKhau] = useState('');
   const [email, setEmail] = useState('');
   const [soDienThoai, setSoDienThoai] = useState('');
   const [ngaySinh, setNgaySinh] = useState('');
   const [diaChi, setDiaChi] = useState('');
-  const [role, setRole] = useState(0); // 0: Người dùng thông thường, 1: Admin
-  const [editingId, setEditingId] = useState(null); // Lưu ID khi cập nhật
+  const [role, setRole] = useState(0);
+  const [editingId, setEditingId] = useState(null);
 
-  // Fetch danh sách nhân viên
   const fetchEmployees = async () => {
     setLoading(true);
     try {
@@ -32,7 +33,6 @@ export default function EmployeeList() {
     fetchEmployees();
   }, []);
 
-  // Thêm hoặc cập nhật nhân viên
   const handleSaveEmployee = async () => {
     if (
       !tenDangNhap ||
@@ -55,6 +55,7 @@ export default function EmployeeList() {
       diaChi,
       role,
     };
+
     try {
       let response;
       if (editingId) {
@@ -72,14 +73,14 @@ export default function EmployeeList() {
       }
 
       if (!response.ok) throw new Error('Lỗi khi lưu nhân viên');
-      await fetchEmployees(); // Cập nhật danh sách
-      resetForm(); // Reset form sau khi lưu
+      await fetchEmployees();
+      resetForm();
+      setShowModal(false);
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Reset form
   const resetForm = () => {
     setTenDangNhap('');
     setMatKhau('');
@@ -91,7 +92,6 @@ export default function EmployeeList() {
     setEditingId(null);
   };
 
-  // Xóa nhân viên
   const handleDeleteEmployee = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa nhân viên này không?')) {
       try {
@@ -105,126 +105,125 @@ export default function EmployeeList() {
     }
   };
 
-  // Chỉnh sửa nhân viên
   const handleEditEmployee = (employee) => {
     setEditingId(employee._id);
     setTenDangNhap(employee.tenDangNhap);
-    setMatKhau(''); // Không hiển thị mật khẩu cũ
+    setMatKhau('');
     setEmail(employee.email);
     setSoDienThoai(employee.soDienThoai);
-    setNgaySinh(employee.ngaySinh?.split('T')[0]); // Chuyển ngày về định dạng YYYY-MM-DD
+    setNgaySinh(employee.ngaySinh?.split('T')[0]);
     setDiaChi(employee.diaChi);
     setRole(employee.role);
+    setShowModal(true);
   };
 
   return (
-    <div className='container'>
-      <h1>Quản lý nhân viên</h1>
+    <Layout>
+      <div className='p-8 max-w-7xl mx-auto'>
+        <h1 className='text-4xl font-bold text-blue-700 mb-6 text-center'>
+          Quản lý nhân viên
+        </h1>
 
-      {/* Form thêm/cập nhật nhân viên */}
-      <div className='add-form'>
-        <h2>{editingId ? 'Cập nhật' : 'Thêm'} nhân viên</h2>
-        <input
-          type='text'
-          placeholder='Tên đăng nhập'
-          value={tenDangNhap}
-          onChange={(e) => setTenDangNhap(e.target.value)}
-        />
-        <input
-          type='password'
-          placeholder='Mật khẩu'
-          value={matKhau}
-          onChange={(e) => setMatKhau(e.target.value)}
-        />
-        <input
-          type='email'
-          placeholder='Email'
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type='text'
-          placeholder='Số điện thoại'
-          value={soDienThoai}
-          onChange={(e) => setSoDienThoai(e.target.value)}
-        />
-        <input
-          type='date'
-          placeholder='Ngày sinh'
-          value={ngaySinh}
-          onChange={(e) => setNgaySinh(e.target.value)}
-        />
-        <input
-          type='text'
-          placeholder='Địa chỉ'
-          value={diaChi}
-          onChange={(e) => setDiaChi(e.target.value)}
-        />
-        <select value={role} onChange={(e) => setRole(Number(e.target.value))}>
-          <option value={0}>Người dùng</option>
-          <option value={1}>Admin</option>
-        </select>
-        <button onClick={handleSaveEmployee}>
-          {editingId ? 'Cập nhật' : 'Thêm'}
-        </button>
-        {editingId && <button onClick={resetForm}>Hủy</button>}
-      </div>
+        <div className='flex justify-end mb-4'>
+          <button
+            onClick={() => setShowModal(true)}
+            className='bg-blue-600 hover:bg-blue-700 text-white text-lg px-6 py-2 rounded-lg shadow transition'
+          >
+            ➕ Thêm mới
+          </button>
+        </div>
 
-      {/* Danh sách nhân viên */}
-      <div className='work-schedule-container'>
-        <h2>Danh sách nhân viên</h2>
-        {loading ? (
-          <p className='loading-text'>Đang tải...</p>
-        ) : (
-          <table className='work-schedule-table'>
-            <thead>
-              <tr>
-                <th>Tên đăng nhập</th>
-                <th>Email</th>
-                <th>Số điện thoại</th>
-                <th>Ngày sinh</th>
-                <th>Địa chỉ</th>
-                <th>Vai trò</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.length > 0 ? (
-                employees.map((employee) => (
-                  <tr key={employee._id}>
-                    <td>{employee.tenDangNhap}</td>
-                    <td>{employee.email}</td>
-                    <td>{employee.soDienThoai}</td>
-                    <td>{employee.ngaySinh?.split('T')[0]}</td>
-                    <td>{employee.diaChi}</td>
-                    <td>{employee.role === 1 ? 'Admin' : 'Người dùng'}</td>
-                    <td>
-                      <button
-                        className='update-btn'
-                        onClick={() => handleEditEmployee(employee)}
-                      >
-                        Cập nhật
-                      </button>
-                      <button
-                        className='delete-btn'
-                        onClick={() => handleDeleteEmployee(employee._id)}
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan='7' className='no-data'>
-                    Không có nhân viên.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {showModal && (
+          <EmployeeModal
+            tenDangNhap={tenDangNhap}
+            setTenDangNhap={setTenDangNhap}
+            matKhau={matKhau}
+            setMatKhau={setMatKhau}
+            email={email}
+            setEmail={setEmail}
+            soDienThoai={soDienThoai}
+            setSoDienThoai={setSoDienThoai}
+            ngaySinh={ngaySinh}
+            setNgaySinh={setNgaySinh}
+            diaChi={diaChi}
+            setDiaChi={setDiaChi}
+            role={role}
+            setRole={setRole}
+            handleSaveEmployee={handleSaveEmployee}
+            resetForm={() => {
+              resetForm();
+              setShowModal(false);
+            }}
+            editingId={editingId}
+          />
         )}
+
+        <div className='bg-white rounded-xl shadow-lg p-6'>
+          <h2 className='text-2xl font-semibold text-blue-600 mb-4'>
+            Danh sách nhân viên
+          </h2>
+          {loading ? (
+            <p className='text-lg text-gray-500'>Đang tải...</p>
+          ) : (
+            <div className='overflow-auto max-h-[500px]'>
+              <table className='min-w-full border border-gray-200 text-lg'>
+                <thead className='bg-blue-100 text-blue-800'>
+                  <tr>
+                    <th className='p-3 text-left'>Tên đăng nhập</th>
+                    <th className='p-3 text-left'>Email</th>
+                    <th className='p-3 text-left'>SĐT</th>
+                    <th className='p-3 text-left'>Ngày sinh</th>
+                    <th className='p-3 text-left'>Địa chỉ</th>
+                    <th className='p-3 text-left'>Vai trò</th>
+                    <th className='p-3 text-left'>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employees.length > 0 ? (
+                    employees.map((employee) => (
+                      <tr
+                        key={employee._id}
+                        className='border-b hover:bg-blue-50 transition'
+                      >
+                        <td className='p-3'>{employee.tenDangNhap}</td>
+                        <td className='p-3'>{employee.email}</td>
+                        <td className='p-3'>{employee.soDienThoai}</td>
+                        <td className='p-3'>
+                          {employee.ngaySinh?.split('T')[0]}
+                        </td>
+                        <td className='p-3'>{employee.diaChi}</td>
+                        <td className='p-3'>
+                          {employee.role === 1 ? 'Admin' : 'Người dùng'}
+                        </td>
+                        <td className='p-3 space-x-2 flex'>
+                          <button
+                            onClick={() => handleEditEmployee(employee)}
+                            className='px-4 py-1 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-white transition'
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEmployee(employee._id)}
+                            className='px-4 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white transition'
+                          >
+                            Xóa
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan='7' className='p-4 text-center text-gray-500'>
+                        Không có nhân viên.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }

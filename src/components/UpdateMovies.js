@@ -12,7 +12,7 @@ export default function UpdateMovies() {
     namSanXuat: '',
     moTa: '',
     ngayCongChieu: '',
-    anhBia: '',
+    // anhBia: '',
     trangThai: '',
   });
 
@@ -33,7 +33,7 @@ export default function UpdateMovies() {
           namSanXuat: data.data.namSanXuat,
           moTa: data.data.moTa,
           ngayCongChieu: data.data.ngayCongChieu.split('T')[0], // Format YYYY-MM-DD
-          anhBia: data.data.anhBia,
+          // anhBia: data.data.anhBia,
           trangThai: data.data.trangThai,
         });
       } catch (error) {
@@ -96,8 +96,7 @@ export default function UpdateMovies() {
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           <div className='mb-4'>
             <label className='block text-gray-700 text-sm font-bold mb-2'>
-              Tên phim
-            </label>
+              Tên phim</label>
             <input
               type='text'
               name='tenPhim'
@@ -176,23 +175,7 @@ export default function UpdateMovies() {
               className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
               required
             />
-          </div>
-
-          <div className='mb-4'>
-            <label className='block text-gray-700 text-sm font-bold mb-2'>
-              Ảnh bìa (URL)
-            </label>
-            <input
-              type='text'
-              name='anhBia'
-              value={formData.anhBia}
-              onChange={handleChange}
-              className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
-              required
-            />
-          </div>
-
-          <div className='mb-4'>
+          </div><div className='mb-4'>
             <label className='block text-gray-700 text-sm font-bold mb-2'>
               Trạng thái
             </label>

@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logout, updateEmployee } from '../redux/slices/authSlice'; // Import updateEmployee từ Redux slice
+import { logout } from '../redux/slices/authSlice'; // Import updateEmployee từ Redux slice
 import { toast } from 'react-toastify';
 import UpdateEmployeeModal from '../components/UpdateEmployeeModal'; // Import modal
+import { updateEmployeeThunk } from '../redux/slices/employeeSlice';
 
 function EmployeeProfile() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { auth } = useSelector((state) => state.auth);
-
+  const { employee, loading } = useSelector((state) => state.employees);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -25,13 +25,12 @@ function EmployeeProfile() {
 
   const handleUpdate = async (updatedData) => {
     try {
-      // Gọi Redux action để cập nhật thông tin nhân viên
+     
       await dispatch(
-        updateEmployee({ employeeId: auth._id, updatedData })
+        updateEmployeeThunk({ employeeId: employee._id, updatedData })
       ).unwrap();
       toast.success('Cập nhật thông tin thành công!');
       setIsModalOpen(false); // Đóng modal sau khi cập nhật
-      window.location.reload(); // Tải lại trang để cập nhật thông tin
     } catch (error) {
       console.error('Lỗi khi cập nhật thông tin:', error);
       toast.error('Cập nhật thông tin thất bại. Vui lòng thử lại!');
@@ -47,19 +46,19 @@ function EmployeeProfile() {
         <div className='space-y-4'>
           <p className='text-lg text-gray-700'>
             <strong className='text-blue-600'>Họ tên:</strong>{' '}
-            {auth?.tenDangNhap || 'Không xác định'}
+            {employee?.tenDangNhap || 'Không xác định'}
           </p>
           <p className='text-lg text-gray-700'>
             <strong className='text-blue-600'>Email:</strong>{' '}
-            {auth?.email || 'Không xác định'}
+            {employee?.email || 'Không xác định'}
           </p>
           <p className='text-lg text-gray-700'>
             <strong className='text-blue-600'>Số điện thoại:</strong>{' '}
-            {auth?.soDienThoai || 'Không xác định'}
+            {employee?.soDienThoai || 'Không xác định'}
           </p>
           <p className='text-lg text-gray-700'>
             <strong className='text-blue-600'>Vai trò:</strong>{' '}
-            {auth?.role === 0 ? 'Quản trị viên' : 'Nhân viên'}
+            {employee?.role === 1 ? 'Quản trị viên' : 'Nhân viên'}
           </p>
         </div>
         <div className='mt-6 flex flex-col gap-4'>
@@ -82,7 +81,7 @@ function EmployeeProfile() {
       <UpdateEmployeeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        employee={auth}
+        employee={employee}
         onUpdate={handleUpdate}
       />
     </div>

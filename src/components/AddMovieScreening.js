@@ -9,7 +9,7 @@ const AddMovieScreening = () => {
     maPhong: '',
     gioBatDau: '',
     gioKetThuc: '',
-    trangThai: true,
+    tranThai: true,
   });
   const [movies, setMovies] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -105,7 +105,7 @@ const AddMovieScreening = () => {
         maPhong: '',
         gioBatDau: '',
         gioKetThuc: '',
-        trangThai: true,
+        tranThai: true,
       });
       navigate('/movieScreenings');
     } catch (error) {
@@ -113,45 +113,6 @@ const AddMovieScreening = () => {
       setMessage('Có lỗi xảy ra khi thêm lịch chiếu. Vui lòng thử lại!');
     }
   };
-
-  // const handleSubmit = async (e) => {
-  //     e.preventDefault();
-  //     if (!validateScreening()) return;
-
-  //     try {
-  //         const response = await fetch('http://localhost:8080/movieScreenings', {
-  //             method: 'POST',
-  //             headers: {
-  //                 'Content-Type': 'application/json',
-  //             },
-  //             body: JSON.stringify(newScreening)
-  //         });
-
-  //         if (!response.ok) {
-  //             const errorData = await response.json();
-  //             throw new Error(errorData.message || 'Lỗi khi thêm lịch chiếu');
-  //         }
-
-  //         const data = await response.json();
-  //         if (data.message) {
-  //             setMessage(data.message);
-  //             return;
-  //         }
-
-  //         setMessage('Thêm lịch chiếu thành công!');
-  //         setNewScreening({
-  //             maPhim: '',
-  //             maPhong: '',
-  //             gioBatDau: '',
-  //             gioKetThuc: '',
-  //             trangThai: true
-  //         });
-  //         navigate('/movieScreenings');
-  //     } catch (error) {
-  //         console.error('Error adding screening:', error);
-  //         setMessage('Có lỗi xảy ra khi thêm lịch chiếu. Vui lòng thử lại!');
-  //     }
-  // };
 
   return (
     <div className='container mx-auto px-4 py-8'>
